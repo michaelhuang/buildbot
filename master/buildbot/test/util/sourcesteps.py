@@ -31,10 +31,10 @@ class SourceStepMixin(steps.BuildStepMixin):
     """
 
     def setUpSourceStep(self):
-        return steps.BuildStepMixin.setUpBuildStep(self)
+        return self.setUpBuildStep()
 
     def tearDownSourceStep(self):
-        return steps.BuildStepMixin.tearDownBuildStep(self)
+        return self.tearDownBuildStep()
 
     # utilities
 

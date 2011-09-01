@@ -86,6 +86,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100')
         return self.runStep()
 
     def test_mode_incremental_baseURL(self):
@@ -110,6 +111,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100')
         return self.runStep()
 
     def test_mode_incremental_baseURL_not_updatable(self):
@@ -134,6 +136,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100')
         return self.runStep()
 
     def test_mode_incremental_given_revision(self):
@@ -160,9 +163,10 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100')
         return self.runStep()
 
-    def test_mode_full_clobber(self):
+    def do_test_mode_full_clobber(self, svnversion, got_revision):
         self.setupStep(
                 svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
                                     mode='full', method='clobber'))
@@ -180,13 +184,21 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svnversion'])
-            + ExpectShell.log('stdio',
-                stdout='100')
+            + ExpectShell.log('stdio', stdout='%s\n' % (svnversion,))
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', got_revision)
         return self.runStep()
 
+    def test_mode_full_clobber_100M(self):
+        return self.do_test_mode_full_clobber('101M', '101')
+
+    def test_mode_full_clobber_100S(self):
+        return self.do_test_mode_full_clobber('101S', '101')
+
+    def test_mode_full_clobber_100P(self):
+        return self.do_test_mode_full_clobber('101P', '101')
 
     def test_mode_full_fresh(self):
         self.setupStep(
@@ -213,11 +225,11 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio', stdout='100')
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100')
         return self.runStep()
 
     def test_mode_full_fresh_keep_on_purge(self):
@@ -250,11 +262,11 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='\n')
-            + ExpectShell.log('stdio', stdout='100')
+            + ExpectShell.log('stdio', stdout='100\n')
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100')
         return self.runStep()
 
     def test_mode_full_clean(self):
@@ -281,11 +293,11 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio', stdout='100')
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100')
         return self.runStep()
 
     def test_mode_full_not_updatable(self):
@@ -305,11 +317,11 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio', stdout='100')
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100')
         return self.runStep()
 
     def test_mode_full_clean_old_rmdir(self):
@@ -345,11 +357,11 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio', stdout='100')
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100')
         return self.runStep()
 
     def test_mode_full_clean_new_rmdir(self):
@@ -383,11 +395,11 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio', stdout='100')
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100')
         return self.runStep()
 
     def test_mode_copy(self):
@@ -419,6 +431,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100')
         return self.runStep()
 
     def test_mode_incremental_with_env(self):
@@ -449,6 +462,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100')
         return self.runStep()
     
     def test_mode_incremental_logEnviron(self):
@@ -479,6 +493,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100')
         return self.runStep()
 
 class TestGetUnversionedFiles(unittest.TestCase):

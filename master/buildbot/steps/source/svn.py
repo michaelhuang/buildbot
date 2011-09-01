@@ -255,12 +255,13 @@ class SVN(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def _setrev(res):
-            output = self.getLog('stdio').readlines()[-1].strip()
-            revision = output.rstrip('MS')
-            revision = revision.split(':')[-1]
+            output = self.getLog('stdio').getText()
+            last_line = output.strip().split('\n')[-1]
+            revision = last_line.rstrip('MSP')
+            revision = revision.split(':')[-1].strip()
             try:
                 int(revision)
-            except ValueError:
+            except (ValueError, TypeError):
                 msg =("SVN.parseGotRevision unable to parse output "
                       "of svnversion: '%s'" % output)
                 log.msg(msg)

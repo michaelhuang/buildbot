@@ -137,6 +137,13 @@ class Expect(object):
         self.result = None
         self.behaviors = []
 
+    def __str__(self):
+        rv = []
+        rv.append("ExpectLogged: %s" % (self.remote_command,))
+        rv.append(" args: %s" % (self.args,))
+        rv.append(" result: %s" % (self.result,))
+        return "\n".join(rv)
+
     @classmethod
     def behavior(cls, callable):
         """
@@ -194,6 +201,13 @@ class ExpectLogged(Expect):
     @classmethod
     def log(self, name, **streams):
         return ('log', name, streams)
+
+    def __str__(self):
+        rv = []
+        rv.append(Expect.__str__(self))
+        for beh in self.behaviors:
+            rv.append(" Behavior: %s" % (beh,))
+        return "\n".join(rv)
 
     def __add__(self, other):
         # special-case adding an integer (return code) or failure (error)
