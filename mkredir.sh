@@ -7,13 +7,13 @@ cat > $1 <<EOF
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>  
-        <meta http-equiv="refresh" content="1;http://buildbot.net/buildbot/$1"/>
+        <meta http-equiv="refresh" content="1;http://buildbot.net/buildbot/docs/current"/>
 
         <title>Buildbot Documentation (redirect)</title>
 </head>
 
 <body>
-<p>This documentation has been moved to <a href="http://buildbot.net/buildbot/$1">buildbot.net</a>.  You will be redirected momentarily.</p>
+<p>This documentation has been moved to <a href="http://buildbot.net/buildbot/docs/current">buildbot.net</a>.  You will be redirected momentarily.</p>
 </body>
 </html>
 EOF
