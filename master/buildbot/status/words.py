@@ -231,11 +231,13 @@ class Contact(base.StatusReceiver):
         return 0
 
     def subscribe_to_build_events(self):
-        self.channel.status.subscribe(self)
+        if not self.subscribed:
+            self.channel.status.subscribe(self)
         self.subscribed = 1
 
     def unsubscribe_from_build_events(self):
-        self.channel.status.unsubscribe(self)
+        if self.subscribed:
+            self.channel.status.unsubscribe(self)
         self.subscribed = 0
 
     def add_notification_events(self, events):
@@ -243,16 +245,16 @@ class Contact(base.StatusReceiver):
             self.validate_notification_event(event)
             self.notify_events[event] = 1
 
-            if not self.subscribed:
-                self.subscribe_to_build_events()
+        if self.notify_events and not self.subscribed:
+            self.subscribe_to_build_events()
 
     def remove_notification_events(self, events):
         for event in events:
             self.validate_notification_event(event)
             del self.notify_events[event]
 
-            if len(self.notify_events) == 0 and self.subscribed:
-                self.unsubscribe_from_build_events()
+        if not self.notify_events and self.subscribed:
+            self.unsubscribe_from_build_events()
 
     def remove_all_notification_events(self):
         self.notify_events = {}
