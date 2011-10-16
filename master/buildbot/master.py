@@ -31,7 +31,8 @@ from buildbot.changes import changes
 from buildbot.changes.manager import ChangeManager
 from buildbot import interfaces
 from buildbot.process.builder import BuilderControl
-from buildbot.db import connector
+from buildbot.db import connector as dbconnector, exceptions
+from buildbot.mq import connector as mqconnector
 from buildbot.schedulers.manager import SchedulerManager
 from buildbot.process.botmaster import BotMaster
 from buildbot.process import debug
@@ -128,8 +129,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         self.user_manager = UserManagerManager(self)
         self.user_manager.setServiceParent(self)
 
-        self.db = connector.DBConnector(self, self.basedir)
+        self.db = dbconnector.DBConnector(self, self.basedir)
         self.db.setServiceParent(self)
+
+        self.mq = mqconnector.MQConnector(self)
+        self.mq.setServiceParent(self)
 
         self.debug = debug.DebugServices(self)
         self.debug.setServiceParent(self)
@@ -176,17 +180,22 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                 _reactor.stop()
                 return
 
-            # set up services that need access to the config before everything else
-            # gets told to reconfig
+            # set up services that need access to the config before everything
+            # else gets told to reconfig
             try:
                 wfd = defer.waitForDeferred(
                         self.db.setup())
                 yield wfd
                 wfd.getResult()
-            except connector.DatabaseNotReadyError:
+            except exceptions.DatabaseNotReadyError:
                 # (message was already logged)
                 _reactor.stop()
                 return
+
+            wfd = defer.waitForDeferred(
+                    self.mq.setup())
+            yield wfd
+            wfd.getResult()
 
             if hasattr(signal, "SIGHUP"):
                 def sighup(*args):
@@ -200,8 +209,8 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             yield wfd
             wfd.getResult()
 
-            # give all services a chance to load the new configuration, rather than
-            # the base configuration
+            # give all services a chance to load the new configuration, rather
+            # than the base configuration
             wfd = defer.waitForDeferred(
                 self.reconfigService(self.config))
             yield wfd
@@ -297,6 +306,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         if self.config.db['db_url'] != new_config.db['db_url']:
             raise config.ConfigErrors([
                 "Cannot change c['db']['db_url'] after the master has started",
+            ])
+
+        if self.config.mq['type'] != new_config.mq['type']:
+            raise config.ConfigErrors([
+                "Cannot change c['mq']['type'] after the master has started",
             ])
 
         # adjust the db poller

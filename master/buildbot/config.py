@@ -75,6 +75,9 @@ class MasterConfig(object):
             db_url='sqlite:///state.sqlite',
             db_poll_interval=None,
         )
+        self.mq = dict(
+            type='simple',
+        )
         self.metrics = None
         self.caches = dict(
             Builds=15,
@@ -96,7 +99,7 @@ class MasterConfig(object):
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
         "multiMaster", "prioritizeBuilders", "projectName", "projectURL",
         "properties", "revlink", "schedulers", "slavePortnum", "slaves",
-        "status", "title", "titleURL", "user_managers", "validation"
+        "status", "title", "titleURL", "user_managers", "validation", 'mq'
     ])
 
     @classmethod
@@ -172,6 +175,7 @@ class MasterConfig(object):
         config.load_global(filename, config_dict, errors)
         config.load_validation(filename, config_dict, errors)
         config.load_db(filename, config_dict, errors)
+        config.load_mq(filename, config_dict, errors)
         config.load_metrics(filename, config_dict, errors)
         config.load_caches(filename, config_dict, errors)
         config.load_schedulers(filename, config_dict, errors)
@@ -299,7 +303,7 @@ class MasterConfig(object):
     def load_db(self, filename, config_dict, errors):
         if 'db' in config_dict:
             db = config_dict['db']
-            if set(db.keys()) > set(['db_url', 'db_poll_interval']):
+            if set(db.keys()) - set(['db_url', 'db_poll_interval']):
                 errors.addError("unrecognized keys in c['db']")
             self.db.update(db)
         if 'db_url' in config_dict:
@@ -316,6 +320,17 @@ class MasterConfig(object):
             errors.addError("c['db_poll_interval'] must be an int")
         else:
             self.db['db_poll_interval'] = db_poll_interval
+
+
+    def load_mq(self, filename, config_dict, errors):
+        if 'mq' in config_dict:
+            mq = config_dict['mq']
+            if set(mq.keys()) - set(['type', 'debug']):
+                errors.addError("unrecognized keys in c['mq']")
+            self.mq.update(mq)
+
+        if self.mq['type'] not in ('simple',):
+            errors.addError("mq type '%s' is not known" % (self.mq['type'],))
 
 
     def load_metrics(self, filename, config_dict, errors):

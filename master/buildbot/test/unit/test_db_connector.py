@@ -17,7 +17,7 @@ import os
 import mock
 from twisted.internet import defer
 from twisted.trial import unittest
-from buildbot.db import connector
+from buildbot.db import connector, exceptions
 from buildbot import config
 from buildbot.test.util import db
 from buildbot.test.fake import fakemaster
@@ -99,7 +99,7 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
     def test_setup_check_version_bad(self):
         d = self.startService(check_version=True)
         def eb(f):
-            f.trap(connector.DatabaseNotReadyError)
+            f.trap(exceptions.DatabaseNotReadyError)
         def cb(_):
             self.fail("startService unexpectedly succeeded")
         d.addCallbacks(cb, eb)
