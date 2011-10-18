@@ -495,6 +495,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
                 yield None
 
         wfd = defer.waitForDeferred(self.master.addBuildset(
+                                        scheduler=self.name,
                                         sourcestampsetid=setid, reason=reason,
                                         properties=properties_dict,
                                         builderNames=builderNames,
