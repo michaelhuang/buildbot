@@ -77,7 +77,6 @@ class RemoveDirectory(base.Command):
         self.sendStatus({'rc': self.rc})
 
     def removeSingleDir(self, dirname):
-        # TODO: remove the old tree in the background
         self.dir = os.path.join(self.builder.basedir, dirname)
         if runtime.platformType != "posix":
             d = threads.deferToThread(utils.rmdirRecursive, self.dir)
