@@ -1,0 +1,27 @@
+from tomprince:
+* docs for request-claiming semantics, link from mq
+* use inlineCallbacks rather than deferredGenerator
+* name MQConnector classes only in mq/connector.py
+* move re's in simple.py to module/class scope
+* s/consume/addConsumer/ (or "startConsuming"?)
+* s/stop_consuming/stopConsuming/g, generally do Twisted style
+* don't verify mq keys in config.py
+
+tasks
+* add builders to objects, use that as builderid
+* finish messages
+* POC web frontend
+* metrics for number of outstanding QueueRef instances, as well as msg/sec, etc.
+* add periodic check-ins for builders (maint)
+* add periodic check-ins for schedulers (maint)
+* add periodic missed-buildrequest scanning in botmaster
+
+on master
+* standardize buildsetid => bsid in db connector too
+* "maint" framework a la cron
+* "monitoring" framework with alerts -> nagios, email, etc. (replace/adopt PollerWatcher)
+
+problems
+* test_load_mq_explicit_type should use something other than 'simple', when
+  another option exists
+* queue schema docs are not entirely accurate
