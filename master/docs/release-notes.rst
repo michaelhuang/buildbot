@@ -72,6 +72,10 @@ Deprecations, Removals, and Non-Compatible Changes
   ``--revision`` when ``alwaysUseLatest`` is set to ``False`` when in the
   ``full`` mode. See :bb:bug:`2194`
 
+* Buildbot no longer polls the database for jobs.  The
+  :bb:cfg:`db_poll_interval` configuration parameter and the :bb:cfg:`db` key
+  of the same name are deprecated and will be ignored.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
