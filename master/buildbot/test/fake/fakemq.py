@@ -31,10 +31,20 @@ class FakeMQConnector(object):
     def produce(self, routing_key, data):
         self.productions.append((routing_key, data))
 
+    def call_consumer(self, topic, key, msg):
+        for q in self.qrefs:
+            if topic in q.topics:
+                return q.callback(key, msg)
+        else:
+            assert 0, "no consumer found"
+
     def consume(self, callback, *topics, **kwargs):
         qref = mock.Mock(name='qref-%s' % callback)
         qref.callback = callback
         qref.topics = topics
         qref.kwargs = kwargs
+        def stop_consuming():
+            self.qrefs.remove(qref)
+        qref.stop_consuming = stop_consuming
         self.qrefs.append(qref)
         return qref

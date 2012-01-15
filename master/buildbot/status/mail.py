@@ -328,7 +328,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.smtpPassword = smtpPassword
         self.smtpPort = smtpPort
         self.buildSetSummary = buildSetSummary
-        self.buildSetSubscription = None
+        self._buildset_complete_consumer = None
         self.watched = []
         self.master_status = None
 
@@ -346,25 +346,22 @@ class MailNotifier(base.StatusReceiverMultiService):
             raise config.ConfigErrors(errors)
 
     def setServiceParent(self, parent):
-        """
-        @type  parent: L{buildbot.master.BuildMaster}
-        """
         base.StatusReceiverMultiService.setServiceParent(self, parent)
         self.master_status = self.parent
         self.master_status.subscribe(self)
 
     def startService(self):
         if self.buildSetSummary:
-            self.buildSetSubscription = \
-            self.master.subscribeToBuildsetCompletions(self.buildsetFinished)
- 
+            self._buildset_complete_consumer = self.master.mq.consume(
+                    self._buildset_complete_cb,
+                    'buildset.*.complete')
+
         base.StatusReceiverMultiService.startService(self)
-        
-   
+
     def stopService(self):
-        if self.buildSetSubscription is not None:
-            self.buildSetSubscription.unsubscribe()
-            self.buildSetSubscription = None
+        if self._buildset_complete_consumer is not None:
+            self._buildset_complete_consumer.stop_consuming()
+            self._buildset_complete_consumer = None
             
         return base.StatusReceiverMultiService.stopService(self)
 
@@ -457,11 +454,10 @@ class MailNotifier(base.StatusReceiverMultiService):
     def _gotBuildSet(self, buildset, bsid):
         d = self.parent.db.buildrequests.getBuildRequests(bsid=bsid)
         d.addCallback(self._gotBuildRequests, buildset)
-        
-    def buildsetFinished(self, bsid, result):
-        d = self.parent.db.buildsets.getBuildset(bsid=bsid)
-        d.addCallback(self._gotBuildSet, bsid)
-            
+
+    def _buildset_complete_cb(self, key, msg):
+        d = self.parent.db.buildsets.getBuildset(bsid=msg['bsid'])
+        d.addCallback(self._gotBuildSet, msg['bsid'])
         return d
 
     def getCustomMesgData(self, mode, name, build, results, master_status):

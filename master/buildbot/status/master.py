@@ -47,12 +47,10 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
 
     def startService(self):
         # subscribe to the things we need to know about
-        self._buildset_completion_sub = \
-            self.master.subscribeToBuildsetCompletions(
-                self._buildsetCompletionCallback)
-        self._buildset_sub = \
-            self.master.subscribeToBuildsets(
-                self._buildsetCallback)
+        self._buildset_new_consumer = self.master.mq.consume(
+                self.bs_new_consumer_cb, 'buildset.*.new')
+        self._buildset_complete_consumer = self.master.mq.consume(
+                self.bs_complete_consumer_cb, 'buildset.*.complete')
         self._br_consumer = self.master.mq.consume(
                 self.br_consumer_cb, 'buildrequest.*.*.*.new')
         self._change_consumer = self.master.mq.consume(
@@ -83,11 +81,11 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         wfd.getResult()
 
     def stopService(self):
-        self._buildset_completion_sub.unsubscribe()
-        self._buildset_completion_sub = None
+        self._buildset_complete_consumer.stop_consuming()
+        self._buildset_complete_consumer = None
 
-        self._buildset_sub.unsubscribe()
-        self._buildset_sub = None
+        self._buildset_new_consumer.stop_consuming()
+        self._buildset_new_consumer = None
 
         self._build_request_sub.unsubscribe()
         self._build_request_sub = None
@@ -455,8 +453,8 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
     def _builder_unsubscribe(self, buildername, watcher):
         self._builder_observers.discard(buildername, watcher)
 
-    def _buildsetCallback(self, **kwargs):
-        bsid = kwargs['bsid']
+    def bs_new_consumer_cb(self, key, msg):
+        bsid = msg['bsid']
         d = self.master.db.buildsets.getBuildset(bsid)
         def do_notifies(bsdict):
             bss = buildset.BuildSetStatus(bsdict, self)
@@ -464,8 +462,8 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
                 if hasattr(t, 'buildsetSubmitted'):
                     t.buildsetSubmitted(bss)
         d.addCallback(do_notifies)
-        d.addErrback(log.err, 'while notifying buildsetSubmitted')
+        return d
 
-    def _buildsetCompletionCallback(self, bsid, result):
-        self._maybeBuildsetFinished(bsid)
+    def bs_complete_consumer_cb(self, key, msg):
+        self._maybeBuildsetFinished(msg['bsid'])
 

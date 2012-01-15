@@ -184,11 +184,15 @@ class TestMailNotifier(unittest.TestCase):
         mn.buildMessageDict = Mock()
         mn.buildMessageDict.return_value = {"body":"body", "type":"text",
                                             "subject":"subject"}
-            
-        mn.buildsetFinished(99, FAILURE)
-        fakeBuildMessage.assert_called_with("Buildset Complete: testReason",
-                                            [build], SUCCESS)
- 
+
+        d = mn._buildset_complete_cb('buildset.99.complete',
+                dict(bsid=99, result=FAILURE))
+        @d.addCallback
+        def check(_):
+            fakeBuildMessage.assert_called_with(
+                    "Buildset Complete: testReason",
+                    [build], SUCCESS)
+        return d
 
     def test_buildFinished_ignores_unspecified_categories(self):
         mn = MailNotifier('from@example.org', categories=['fast'])
