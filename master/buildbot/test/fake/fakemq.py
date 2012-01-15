@@ -22,6 +22,7 @@ class FakeMQConnector(object):
         self.master = master
         self.setup_called = False
         self.productions = []
+        self.qrefs = []
 
     def setup(self):
         self.setup_called = True
