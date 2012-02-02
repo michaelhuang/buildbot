@@ -785,4 +785,15 @@ following keys:
     ``static/``, ``ui/``, and ``api/`` paths are reserved, although more
     reserved paths may be added in future versions.
 
+``json_minimum_version``
+    The minimum supported JSON API version.  Any versions less than this value
+    will not be available.  This can be used to ensure that no clients are
+    depending on API versions that will soon be removed from Buildbot.
+
+``json_cache_seconds``
+
+    Number of seconds that clients may cache JSON results.  This affects the
+    ``Expires`` header.  The default value is 0, meaning no caching-related
+    headers are sent.
+
 .. _TwistedConch: http://twistedmatrix.com/trac/wiki/TwistedConch

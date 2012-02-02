@@ -18,7 +18,6 @@ from twisted.internet import defer
 from twisted.python import  util
 from twisted.application import strports, service
 from twisted.web import server, static
-from buildbot.www import ui, resource
 
 class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
 
@@ -66,6 +65,9 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
         wfd.getResult()
 
     def setup_site(self, new_config):
+        # avoid importing these modules unless the service is enabled
+        from buildbot.www import ui, resource, json
+
         public_html =  new_config.www.get('public_html')
         if public_html:
             root = static.File(public_html)
@@ -77,6 +79,9 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
 
         # /ui
         root.putChild('ui', ui.UIResource(self.master))
+
+        # /ui
+        root.putChild('json', json.JsonRootResource(self.master))
 
         # /static
         staticdir = util.sibpath(__file__, 'static')
