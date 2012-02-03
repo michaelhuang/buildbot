@@ -26,14 +26,21 @@ bb.load = {
     resources: [],
 };
 
-bb.load.js = function(next, filename) {
+bb.load._get_resource = function(type, name) {
     // see if it's already loaded, and if so, return immediately
     var nresources = bb.load.resources.length;
     for (var i = 0; i < nresources; i++) {
         var r = bb.load.resources[i];
-        if (r.type === 'js' && r.name === filename) {
-            return true;
+        if (r.type === 'js' && r.name === name) {
+            return r;
         }
+    }
+};
+
+bb.load.js = function(next, filename) {
+    var r = bb.load._get_resource('js', filename);
+    if (r) {
+        return true; // already loaded
     }
 
     // otherwise, add it to the resource list
@@ -47,7 +54,18 @@ bb.load.js = function(next, filename) {
     load(bb.baseurl + "static/js/" + filename)
         .thenRun(next);
     // TODO: error handling
-}
+};
+
+bb.load.api = function(next, path) {
+    var r = bb.load._get_resource('js', path);
+    if (r) {
+        return next(r.value);
+    }
+
+    var url = bb.baseurl + "api/latest/" + path;
+    console.log(url);
+    return next(['xxx', 'yyy']);
+};
 
 //
 // Page display

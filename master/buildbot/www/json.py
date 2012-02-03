@@ -183,7 +183,7 @@ class JsonV1Resource(JsonBaseResource):
 
     @JsonBaseResource.path('builders')
     def json_builders(self, request):
-        return []
+        return ['abc', 'def']
 
     @JsonBaseResource.path('builders', '$builderid')
     def json_builder(self, request, builderid):
