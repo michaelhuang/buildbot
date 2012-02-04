@@ -13,28 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.web import resource
+from buildbot.www import ui
+from buildbot.test.util import www
+from twisted.trial import unittest
 
-class Resource(resource.Resource):
+class Test(www.WwwTestMixin, unittest.TestCase):
 
-    # as a convenience, subclasses have a ``master`` attribute, and a
-    # ``baseurl`` attribute giving Buildbot's base URL
+    def test_render(self):
+        master = self.make_master(url='h:/a/b/')
+        rsrc = ui.UIResource(master)
 
-    @property
-    def baseurl(self):
-        return self.master.config.www['url']
-
-    def __init__(self, master):
-        resource.Resource.__init__(self)
-        self.master = master
-
-class RedirectResource(Resource):
-
-    def __init__(self, master, basepath):
-        Resource.__init__(self, master)
-        self.basepath = basepath
-
-    def render(self, request):
-        redir = self.baseurl + self.basepath
-        request.redirect(redir)
-        return redir
+        d = self.render_resource(rsrc, [''])
+        @d.addCallback
+        def check(rv):
+            self.assertIn('baseurl = "h:/a/b/";', rv)
+        return d

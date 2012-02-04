@@ -29,28 +29,33 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
         self.port = None
         self.port_service = None
         self.site = None
+        self.site_public_html = None
 
     @defer.deferredGenerator
     def reconfigService(self, new_config):
+        www = new_config.www
+
         need_new_site = False
         if self.site:
-            if new_config.get('public_html') != self.site.public_html:
+            if www.get('public_html') != self.site_public_html:
                 need_new_site = True
         else:
-            need_new_site = True
+            if www['port']:
+                need_new_site = True
 
         if need_new_site:
             self.setup_site(new_config)
 
-        if new_config.www['port'] != self.port:
+        if www['port'] != self.port:
             if self.port_service:
                 wfd = defer.waitForDeferred(
-                    self.port_service.disownServiceParent())
+                    defer.maybeDeferred(lambda :
+                        self.port_service.disownServiceParent()))
                 yield wfd
                 wfd.getResult()
                 self.port_service = None
 
-            self.port = new_config.www['port']
+            self.port = www['port']
             if self.port:
                 port = self.port
                 if type(port) is int:
@@ -68,7 +73,7 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
         # avoid importing these modules unless the service is enabled
         from buildbot.www import ui, resource, json
 
-        public_html =  new_config.www.get('public_html')
+        public_html = self.site_public_html = new_config.www.get('public_html')
         if public_html:
             root = static.File(public_html)
         else:
