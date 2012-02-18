@@ -1,11 +1,16 @@
 from tomprince:
-* docs for request-claiming semantics, link from mq
 * use inlineCallbacks rather than deferredGenerator
 * name MQConnector classes only in mq/connector.py
 * move re's in simple.py to module/class scope
 * s/consume/addConsumer/ (or "startConsuming"?)
 * s/stop_consuming/stopConsuming/g, generally do Twisted style
 * don't verify mq keys in config.py
+* message contents are XXdicts, maybe plus useful stuff
+
+* bug/TODO: failing to claim a merged set != all requests claimed elsewhere ->
+  retry? or does this fix it:
+
+* backup buildreq poller -> un-delete the poll interval config
 
 tasks
 * add builders to objects, use that as builderid
