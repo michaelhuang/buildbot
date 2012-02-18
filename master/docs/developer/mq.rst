@@ -16,21 +16,24 @@ changes to the state are announced in the form of a message.  The content of
 the messages is sufficient to reconstruct the updated state, allowing external
 processes to represent "live" state without polling the database.
 
-Buildbot assumes that the database is "faster" than the message queueing
-system.  In particular, it is careful to send each message *after* the
-correspnding change has been committed to the database, and message consumers
-can assume that database queries performed after a message is received will
-reflect the state update described by the message.  This assumption may be
-invalid for distributed databases configured with read-only database slaves, so
-Buildbot does not support this mode of operation.
+This split nature immediately brings to light the problem of synchronizing the
+two interfaces.  Queueing systems can introduce queueing delays as messages
+propagate.   Likewise, database systems may introduce a delay between committed
+modifications and the modified data appearing in queries; for example, with
+MySQL master/slave replication, there can be several seconds' delay in a before
+a slave is updated.
+
+Buildbot's MQ connector simply relays messages, and makes no attempt to
+coordinate the timing of those messages with the corresponding database
+updates.  It is up to higher layers to apply such coordination.
+
+Connector API
+-------------
 
 All access to the queueing infrastructure is mediated by an MQ connector.  The
 connector's API is defined below.  The connector itself is always available as
 ``master.mq``, where ``master`` is the current
 :py:class:`~buildbot.master.BuildMaster` instance.
-
-Connector API
--------------
 
 .. py:module:: buildbot.mq.base
 
@@ -169,12 +172,9 @@ Queue Schema
 ------------
 
 Buildbot uses a particularly simple architecture: in AMQP terms, all messages
-are sent to a single topic exchange, and consumers define anonymous queues
-bound to that exchange.
-
-In future versions of Buildbot, some components (e.g., schedulers) may use
-durable queues to ensure that messages are not lost when one or more masters
-are disconnected.
+are sent to a single topic exchange, and consumers define queues bound to that
+exchange.  The API allows use of persistent queues (the `persistent_name`
+argument to :py:meth:`~buildbot.mq.base.MQConnector.consume`).
 
 .. _message-schema:
 
