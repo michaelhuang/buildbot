@@ -14,6 +14,7 @@ Buildbot.
     style
     master-overview
     definitions
+    br-claiming
     config
     utils
     database
